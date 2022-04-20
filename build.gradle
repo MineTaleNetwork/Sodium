@@ -1,0 +1,52 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'maven-publish'
+    id 'idea'
+    id 'java'
+}
+
+group 'cc.minetale'
+version 'LATEST'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url = 'https://repo.mattmalec.com/repository/releases' }
+}
+
+dependencies {
+    compileOnly("org.projectlombok:lombok:1.18.22")
+    annotationProcessor("org.projectlombok:lombok:1.18.22")
+
+    implementation("cc.minetale:Postman:LATEST")
+    implementation("redis.clients:jedis:4.2.0")
+    implementation("net.kyori:adventure-api:4.10.1")
+    implementation("net.kyori:adventure-text-minimessage:4.10.1")
+    implementation("org.mongodb:mongodb-driver:3.12.10")
+}
+
+compileJava.options.encoding('UTF-8')
+javadoc.options.encoding('UTF-8')
+
+sourceCompatibility = 17
+targetCompatibility = 17
+
+shadowJar {
+    archiveClassifier.set(null)
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    publications {
+        Library(MavenPublication) {
+            artifact sourcesJar
+            artifact javadocJar
+            artifact shadowJar
+        }
+    }
+}
