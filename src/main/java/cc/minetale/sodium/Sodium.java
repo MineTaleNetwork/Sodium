@@ -3,7 +3,7 @@ package cc.minetale.sodium;
 import cc.minetale.postman.Postman;
 import cc.minetale.sodium.data.EventListener;
 import cc.minetale.sodium.payloads.GrantPayload;
-import cc.minetale.sodium.payloads.PunishmentPayload;
+import cc.minetale.sodium.payloads.PunishmentAddPayload;
 import cc.minetale.sodium.payloads.UpdateProfilePayload;
 import cc.minetale.sodium.payloads.proxy.ProxyPlayerConnectPayload;
 import cc.minetale.sodium.payloads.proxy.ProxyPlayerDisconnectPayload;
@@ -19,8 +19,6 @@ import com.mongodb.client.MongoDatabase;
 import lombok.Getter;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bson.json.JsonMode;
-import org.bson.json.JsonWriterSettings;
 import redis.clients.jedis.JedisPool;
 
 import java.util.ArrayList;
@@ -61,7 +59,7 @@ public class Sodium {
                 ProxyPlayerDisconnectPayload.class,
                 ProxyPlayerSwitchPayload.class,
                 GrantPayload.class,
-                PunishmentPayload.class,
+                PunishmentAddPayload.class,
                 UpdateProfilePayload.class
         ).forEach(payload -> postman.getPayloadsRegistry().registerPayload(payload));
     }

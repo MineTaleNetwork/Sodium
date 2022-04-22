@@ -8,16 +8,9 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter @AllArgsConstructor
-public class PunishmentPayload extends Payload {
+public class PunishmentAddPayload extends Payload {
 
     private UUID player;
-    private Action action;
     private Punishment punishment;
-
-    public enum Action {
-        ADD,
-        REMOVE,
-        EXPIRE
-    }
 
 }

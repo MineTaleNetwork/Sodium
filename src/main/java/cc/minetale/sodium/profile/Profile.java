@@ -1,10 +1,11 @@
 package cc.minetale.sodium.profile;
 
+import cc.minetale.postman.Postman;
 import cc.minetale.sodium.Sodium;
 import cc.minetale.sodium.cache.ProfileCache;
 import cc.minetale.sodium.data.HubVisibility;
 import cc.minetale.sodium.payloads.GrantPayload;
-import cc.minetale.sodium.payloads.PunishmentPayload;
+import cc.minetale.sodium.payloads.PunishmentAddPayload;
 import cc.minetale.sodium.profile.punishment.PunishmentType;
 import cc.minetale.sodium.util.MongoUtil;
 import cc.minetale.sodium.profile.grant.Grant;
@@ -103,7 +104,8 @@ public class Profile {
 
         MongoUtil.saveDocument(Punishment.getCollection(), punishment.getUuid(), punishment);
         ProfileCache.updateProfile(this);
-        Sodium.getPostman().broadcast(new PunishmentPayload(uuid, PunishmentPayload.Action.ADD, punishment));
+
+        Sodium.getPostman().broadcast(new PunishmentAddPayload(uuid, punishment));
 
         for (var provider : Sodium.getListeners()) {
             provider.addPunishment(punishment);
@@ -117,7 +119,6 @@ public class Profile {
 
         MongoUtil.saveDocument(Punishment.getCollection(), punishment.getUuid(), punishment);
         ProfileCache.updateProfile(this);
-        Sodium.getPostman().broadcast(new PunishmentPayload(uuid, PunishmentPayload.Action.REMOVE, punishment));
 
         for (var provider : Sodium.getListeners()) {
             provider.removePunishment(punishment);
@@ -131,7 +132,6 @@ public class Profile {
 
         MongoUtil.saveDocument(Punishment.getCollection(), punishment.getUuid(), punishment);
         ProfileCache.updateProfile(this);
-        Sodium.getPostman().broadcast(new PunishmentPayload(uuid, PunishmentPayload.Action.EXPIRE, punishment));
 
         for (var provider : Sodium.getListeners()) {
             provider.expirePunishment(punishment);
@@ -145,7 +145,8 @@ public class Profile {
 
         MongoUtil.saveDocument(Grant.getCollection(), grant.getUuid(), grant);
         ProfileCache.updateProfile(this);
-        Sodium.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.ADD, grant));
+
+        Postman.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.ADD, grant));
 
         for (var listener : Sodium.getListeners()) {
             listener.addGrant(grant);
@@ -161,7 +162,8 @@ public class Profile {
 
         MongoUtil.saveDocument(Grant.getCollection(), grant.getUuid(), grant);
         ProfileCache.updateProfile(this);
-        Sodium.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.REMOVE, grant));
+
+        Postman.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.REMOVE, grant));
 
         for (var listener : Sodium.getListeners()) {
             listener.removeGrant(grant);
@@ -177,7 +179,8 @@ public class Profile {
 
         MongoUtil.saveDocument(Grant.getCollection(), grant.getUuid(), grant);
         ProfileCache.updateProfile(this);
-        Sodium.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.EXPIRE, grant));
+
+        Postman.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.EXPIRE, grant));
 
         for (var listener : Sodium.getListeners()) {
             listener.expireGrant(grant);
