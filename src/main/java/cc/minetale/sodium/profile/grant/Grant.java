@@ -48,8 +48,8 @@ public class Grant extends ProfileObject {
         return rank == Rank.MEMBER;
     }
 
-    public static Grant getGrant(String uuid) {
-        var document = collection.find(Filters.eq("_id", uuid)).first();
+    public static Grant getGrant(String grant) {
+        var document = collection.find(Filters.eq("_id", grant)).first();
 
         if (document != null) {
             return JsonUtil.readFromJson(document, Grant.class);
@@ -58,10 +58,10 @@ public class Grant extends ProfileObject {
         return null;
     }
 
-    public static List<Grant> getGrants(UUID uuid) {
-        var grants = new ArrayList<Grant>();
+    public static List<Grant> getGrants(UUID player) {
+        var grants = new ArrayList<>(List.of(Grant.DEFAULT_GRANT));
 
-        for (var document : collection.find(Filters.eq("playerId", uuid.toString()))) {
+        for (var document : collection.find(Filters.eq("playerId", player.toString()))) {
             var grant = JsonUtil.readFromJson(document, Grant.class);
 
             if(grant != null) {

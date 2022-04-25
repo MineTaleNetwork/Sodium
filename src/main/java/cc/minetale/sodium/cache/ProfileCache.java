@@ -37,8 +37,8 @@ public class ProfileCache {
         }
     }
 
-    public static void updateStatus(UUID uuid, String server) {
-        var redisProfile = ProfileUtil.fromCache(uuid);
+    public static void updateStatus(UUID player, String server) {
+        var redisProfile = ProfileUtil.fromCache(player);
 
         if (redisProfile != null) {
             redisProfile.setServer(server);
@@ -47,13 +47,12 @@ public class ProfileCache {
         }
     }
 
+    // TODO -> Load profile from mongo and rechache it
     public static void updateProfile(Profile profile) {
         var redisProfile = ProfileUtil.fromCache(profile.getUuid());
 
         if (redisProfile != null) {
             redisProfile.setProfile(profile);
-            redisProfile.setGrants(profile.getGrants());
-            redisProfile.setPunishments(profile.getPunishments());
 
             pushCache(redisProfile);
 

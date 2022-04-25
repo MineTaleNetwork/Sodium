@@ -25,7 +25,11 @@ public class ProfileUtil {
 
         switch (response.response()) {
             case RETRIEVED -> {
-                return response.profile();
+                var profile = response.profile();
+
+                ProfileCache.pushCache(profile);
+
+                return profile;
             }
             case NOT_FOUND -> {
                 var profile = new Profile(uuid, name);
