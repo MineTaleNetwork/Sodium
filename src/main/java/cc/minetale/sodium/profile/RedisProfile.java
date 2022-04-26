@@ -29,6 +29,8 @@ public class RedisProfile {
         profile.setGrants(grants);
         profile.setPunishments(punishments);
 
+        profile.activateNextGrant();
+
         return profile;
     }
 

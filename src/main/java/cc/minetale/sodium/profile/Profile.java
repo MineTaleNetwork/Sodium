@@ -177,6 +177,8 @@ public class Profile {
         grant.setRemovedAt(grant.getAddedAt() + grant.getDuration());
         grant.setRemovedReason("Grant Expired");
 
+        System.out.println(Sodium.getGson().toJson(grant));
+
         MongoUtil.saveDocument(Grant.getCollection(), grant.getUuid(), grant);
         ProfileCache.updateProfile(this);
 
@@ -189,6 +191,7 @@ public class Profile {
 
     public void checkGrants() {
         for (var grant : grants) {
+            System.out.println(grant.isRemoved() + " | " + grant.hasExpired() + " | " + grant.isActive());
             if (!grant.isRemoved() && grant.hasExpired()) {
                 expireGrant(grant);
             }

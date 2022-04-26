@@ -29,24 +29,32 @@ dependencies {
 compileJava.options.encoding('UTF-8')
 javadoc.options.encoding('UTF-8')
 
-sourceCompatibility = 17
-targetCompatibility = 17
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
 
 shadowJar {
     archiveClassifier.set(null)
 }
 
+setSourceCompatibility(JavaVersion.VERSION_17)
+setTargetCompatibility(JavaVersion.VERSION_17)
+
 java {
-    withSourcesJar()
     withJavadocJar()
+    withSourcesJar()
 }
+
+shadowJar.finalizedBy(javadocJar, sourcesJar)
 
 publishing {
     publications {
-        Library(MavenPublication) {
-            artifact sourcesJar
-            artifact javadocJar
-            artifact shadowJar
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+            artifacts = [ shadowJar, javadocJar, sourcesJar ]
         }
     }
 }
