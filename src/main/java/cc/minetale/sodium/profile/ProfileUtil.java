@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class ProfileUtil {
@@ -106,49 +108,60 @@ public class ProfileUtil {
         return null;
     }
 
-    public static List<RedisProfile> getProfiles(List<UUID> players) {
-        if (players.isEmpty()) { return Collections.emptyList(); }
+    public static CompletableFuture<List<RedisProfile>> getProfiles(List<UUID> players) {
+        return new CompletableFuture<List<RedisProfile>>().completeAsync(() -> {
+            if (players.isEmpty()) { return Collections.emptyList(); }
 
-        var profiles = new ArrayList<RedisProfile>();
-        var uuidQueue = new ArrayList<UUID>();
+            var profiles = new ArrayList<RedisProfile>();
 
-        var redisProfiles = Redis.runRedisCommand(jedis -> jedis.hmget(ProfileCache.KEY,
-                players.stream()
-                        .map(UUID::toString)
-                        .toArray(String[]::new)
-        ));
-
-        if(redisProfiles != null) {
-            for(int i = 0; i < players.size(); i++) {
-                var json = redisProfiles.get(i);
-
-                if(json == null) {
-                    uuidQueue.add(players.get(i));
-                } else {
-                    var redisProfile = JsonUtil.readFromJson(json, RedisProfile.class);
-                    if(redisProfile != null) { profiles.add(redisProfile); }
-                }
-            }
-        }
-
-        if(!uuidQueue.isEmpty()) {
-            var documents = Profile.getCollection()
-                    .find(Filters.in("_id", uuidQueue.stream()
+            var redisProfiles = Redis.runRedisCommand(jedis -> jedis.hmget(ProfileCache.KEY,
+                    players.stream()
                             .map(UUID::toString)
-                            .toList())
-                    );
+                            .toArray(String[]::new)
+            ));
 
-            for (var document : documents) {
-                var response = fromDocument(document);
+            var uuidQueue = new ArrayList<UUID>();
 
-                if (response.response() == ProfileRetrieval.Response.RETRIEVED) {
-                    ProfileCache.pushCache(response.profile());
-                    profiles.add(new RedisProfile(response.profile()));
+            if(redisProfiles != null) {
+                for(int i = 0; i < players.size(); i++) {
+                    var json = redisProfiles.get(i);
+
+                    if(json == null) {
+                        uuidQueue.add(players.get(i));
+                    } else {
+                        var redisProfile = JsonUtil.readFromJson(json, RedisProfile.class);
+                        if(redisProfile != null) {
+                            profiles.add(redisProfile);
+                        } else {
+                            uuidQueue.add(players.get(i));
+                        }
+                    }
                 }
             }
-        }
 
-        return profiles;
+            var mongoProfiles = new ArrayList<RedisProfile>();
+
+            if(!uuidQueue.isEmpty()) {
+                var documents = Profile.getCollection()
+                        .find(Filters.in("_id", uuidQueue.stream()
+                                .map(UUID::toString)
+                                .collect(Collectors.toList()))
+                        );
+
+                for (var document : documents) {
+                    var response = fromDocument(document);
+
+                    if (response.response() == ProfileRetrieval.Response.RETRIEVED) {
+                        mongoProfiles.add(new RedisProfile(response.profile()));
+                    }
+                }
+            }
+
+            ProfileCache.bulkPushCache(mongoProfiles);
+            profiles.addAll(mongoProfiles);
+
+            return profiles;
+        });
     }
 
 }
