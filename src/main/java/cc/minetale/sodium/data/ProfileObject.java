@@ -2,13 +2,14 @@ package cc.minetale.sodium.data;
 
 import cc.minetale.sodium.util.TimeUtil;
 import com.google.gson.annotations.SerializedName;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-@Getter @Setter
+@Getter @Setter @EqualsAndHashCode(of = "uuid")
 public class ProfileObject {
 
     @SerializedName("_id")

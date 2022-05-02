@@ -4,8 +4,7 @@ import cc.minetale.postman.Postman;
 import cc.minetale.sodium.Sodium;
 import cc.minetale.sodium.cache.ProfileCache;
 import cc.minetale.sodium.data.HubVisibility;
-import cc.minetale.sodium.payloads.GrantPayload;
-import cc.minetale.sodium.payloads.PunishmentAddPayload;
+import cc.minetale.sodium.payloads.ProfileUpdatePayloads;
 import cc.minetale.sodium.profile.punishment.PunishmentType;
 import cc.minetale.sodium.util.MongoUtil;
 import cc.minetale.sodium.profile.grant.Grant;
@@ -103,9 +102,9 @@ public class Profile {
         punishments.add(punishment);
 
         MongoUtil.saveDocument(Punishment.getCollection(), punishment.getUuid(), punishment);
-        ProfileCache.updateProfile(this);
+        ProfileCache.modifyPunishment(getUuid(), punishment);
 
-        Sodium.getPostman().broadcast(new PunishmentAddPayload(uuid, punishment));
+        Postman.getPostman().broadcast(new ProfileUpdatePayloads.PunishmentPayload(uuid, ProfileUpdatePayloads.Action.ADD, punishment));
 
         for (var provider : Sodium.getListeners()) {
             provider.addPunishment(punishment);
@@ -118,7 +117,9 @@ public class Profile {
         punishment.setRemovedReason(removedReason);
 
         MongoUtil.saveDocument(Punishment.getCollection(), punishment.getUuid(), punishment);
-        ProfileCache.updateProfile(this);
+        ProfileCache.modifyPunishment(getUuid(), punishment);
+
+        Postman.getPostman().broadcast(new ProfileUpdatePayloads.PunishmentPayload(uuid, ProfileUpdatePayloads.Action.REMOVE, punishment));
 
         for (var provider : Sodium.getListeners()) {
             provider.removePunishment(punishment);
@@ -131,7 +132,9 @@ public class Profile {
         punishment.setRemovedReason("Punishment Expired");
 
         MongoUtil.saveDocument(Punishment.getCollection(), punishment.getUuid(), punishment);
-        ProfileCache.updateProfile(this);
+        ProfileCache.modifyPunishment(uuid, punishment);
+
+        Postman.getPostman().broadcast(new ProfileUpdatePayloads.PunishmentPayload(uuid, ProfileUpdatePayloads.Action.EXPIRE, punishment));
 
         for (var provider : Sodium.getListeners()) {
             provider.expirePunishment(punishment);
@@ -144,9 +147,9 @@ public class Profile {
         grants.add(grant);
 
         MongoUtil.saveDocument(Grant.getCollection(), grant.getUuid(), grant);
-        ProfileCache.updateProfile(this);
+        ProfileCache.modifyGrant(uuid, grant);
 
-        Postman.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.ADD, grant));
+        Postman.getPostman().broadcast(new ProfileUpdatePayloads.GrantPayload(uuid, ProfileUpdatePayloads.Action.ADD, grant));
 
         for (var listener : Sodium.getListeners()) {
             listener.addGrant(grant);
@@ -161,9 +164,9 @@ public class Profile {
         grant.setRemovedReason(removedReason);
 
         MongoUtil.saveDocument(Grant.getCollection(), grant.getUuid(), grant);
-        ProfileCache.updateProfile(this);
+        ProfileCache.modifyGrant(uuid, grant);
 
-        Postman.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.REMOVE, grant));
+        Postman.getPostman().broadcast(new ProfileUpdatePayloads.GrantPayload(uuid, ProfileUpdatePayloads.Action.REMOVE, grant));
 
         for (var listener : Sodium.getListeners()) {
             listener.removeGrant(grant);
@@ -177,12 +180,10 @@ public class Profile {
         grant.setRemovedAt(grant.getAddedAt() + grant.getDuration());
         grant.setRemovedReason("Grant Expired");
 
-        System.out.println(Sodium.getGson().toJson(grant));
-
         MongoUtil.saveDocument(Grant.getCollection(), grant.getUuid(), grant);
-        ProfileCache.updateProfile(this);
+        ProfileCache.modifyGrant(uuid, grant);
 
-        Postman.getPostman().broadcast(new GrantPayload(uuid, GrantPayload.Action.EXPIRE, grant));
+        Postman.getPostman().broadcast(new ProfileUpdatePayloads.GrantPayload(uuid, ProfileUpdatePayloads.Action.EXPIRE, grant));
 
         for (var listener : Sodium.getListeners()) {
             listener.expireGrant(grant);
@@ -191,7 +192,6 @@ public class Profile {
 
     public void checkGrants() {
         for (var grant : grants) {
-            System.out.println(grant.isRemoved() + " | " + grant.hasExpired() + " | " + grant.isActive());
             if (!grant.isRemoved() && grant.hasExpired()) {
                 expireGrant(grant);
             }

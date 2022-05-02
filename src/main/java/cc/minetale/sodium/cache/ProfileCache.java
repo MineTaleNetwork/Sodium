@@ -1,14 +1,17 @@
 package cc.minetale.sodium.cache;
 
 import cc.minetale.postman.Postman;
-import cc.minetale.sodium.payloads.UpdateProfilePayload;
+import cc.minetale.sodium.payloads.ProfileUpdatePayloads;
 import cc.minetale.sodium.profile.Profile;
 import cc.minetale.sodium.profile.ProfileUtil;
 import cc.minetale.sodium.profile.RedisProfile;
+import cc.minetale.sodium.profile.grant.Grant;
+import cc.minetale.sodium.profile.punishment.Punishment;
 import cc.minetale.sodium.util.Config;
 import cc.minetale.sodium.util.JsonUtil;
 import cc.minetale.sodium.util.Redis;
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.UUID;
 
@@ -47,16 +50,29 @@ public class ProfileCache {
         }
     }
 
-    // TODO -> Load profile from mongo and rechache it
-    public static void updateProfile(Profile profile) {
-        var redisProfile = ProfileUtil.fromCache(profile.getUuid());
+    public static void modifyGrant(UUID player, Grant grant) {
+        var redisProfile = ProfileUtil.fromCache(player);
 
         if (redisProfile != null) {
-            redisProfile.setProfile(profile);
+            var grants = redisProfile.getGrants();
+
+            grants.remove(grant);
+            grants.add(grant);
 
             pushCache(redisProfile);
+        }
+    }
 
-            Postman.getPostman().broadcast(new UpdateProfilePayload(profile.getUuid()));
+    public static void modifyPunishment(UUID player, Punishment punishment) {
+        var redisProfile = ProfileUtil.fromCache(player);
+
+        if (redisProfile != null) {
+            var punishments = redisProfile.getPunishments();
+
+            punishments.remove(punishment);
+            punishments.add(punishment);
+
+            pushCache(redisProfile);
         }
     }
 
@@ -64,6 +80,7 @@ public class ProfileCache {
         pushCache(new RedisProfile(profile));
     }
 
+    @ApiStatus.Experimental
     public static void pushCache(RedisProfile profile) {
         var uuid = profile.getProfile().getUuid().toString();
         var json = JsonUtil.writeToJson(profile);

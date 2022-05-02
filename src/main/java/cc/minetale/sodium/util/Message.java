@@ -22,7 +22,7 @@ public class Message {
     public static Component notification(String prefix, Component component) {
         return Component.text()
                 .append(
-                        Component.text(prefix, NamedTextColor.GOLD, TextDecoration.BOLD),
+                        Component.text(prefix, Colors.BLUE, TextDecoration.BOLD),
                         Component.text(" » ", NamedTextColor.DARK_GRAY, TextDecoration.BOLD),
                         component
                 ).build();

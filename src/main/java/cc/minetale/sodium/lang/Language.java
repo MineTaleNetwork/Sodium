@@ -29,7 +29,7 @@ public class Language {
     }
 
     public static class Command {
-        public static String UNKNOWN_COMMAND = notification("Command") + "You have entered an unknown command.";
+        public static String UNKNOWN_COMMAND = notification("Command") + "<gray>You have entered an unknown command.";
         public static String COMMAND_EXCEPTION = notification("Command") + "<red>An error occurred when trying to execute that command.";
         public static String COMMAND_PERMISSION = notification("Command") + "<gray>You need <0> rank to use this command.";
     }

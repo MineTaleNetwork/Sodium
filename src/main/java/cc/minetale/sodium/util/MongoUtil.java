@@ -1,5 +1,6 @@
 package cc.minetale.sodium.util;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
@@ -8,6 +9,17 @@ import org.bson.Document;
 
 @UtilityClass
 public class MongoUtil {
+
+    public static void updateField(MongoCollection<Document> collection, Object uuid, Object object) {
+        var document = JsonUtil.writeToJson(object);
+
+        if (document != null) {
+            collection.updateOne(
+                    Filters.eq(uuid.toString()),
+                    new BasicDBObject("_id", "")
+            );
+        }
+    }
 
     public static void saveDocument(MongoCollection<Document> collection, Object uuid, Object object) {
         var document = JsonUtil.writeToJson(object);
