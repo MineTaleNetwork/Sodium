@@ -75,6 +75,18 @@ public class ProfileCache {
         pushCache(redisProfile);
     }
 
+    public static void modifyProfile(Profile profile) {
+        var redisProfile = ProfileUtil.fromCache(profile.getUuid());
+
+        if (redisProfile == null) { return; }
+
+        redisProfile.setProfile(profile);
+
+        pushCache(redisProfile);
+
+        // TODO -> Payload??
+    }
+
     public static void pushCache(Profile profile) {
         pushCache(new RedisProfile(profile));
     }

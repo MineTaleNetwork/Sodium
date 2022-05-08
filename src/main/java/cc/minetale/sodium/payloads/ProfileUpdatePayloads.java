@@ -13,6 +13,13 @@ public final class ProfileUpdatePayloads {
     private ProfileUpdatePayloads() {}
 
     @Getter @AllArgsConstructor
+    public static class UpdateProfilePayload extends Payload {
+
+        private UUID playerUuid;
+
+    }
+
+    @Getter @AllArgsConstructor
     public static class GrantPayload extends Payload {
 
         private UUID playerUuid;

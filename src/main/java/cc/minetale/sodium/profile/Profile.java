@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 
 @Getter @Setter
 public class Profile {
@@ -76,13 +77,13 @@ public class Profile {
         friends.remove(profile.getUuid());
     }
 
-    public int getPunishmentCountByType(PunishmentType type) {
-        return (int) this.punishments.stream().filter(punishment -> punishment.getType() == type).count();
+    public List<Punishment> getPunishments(PunishmentType type) {
+        return punishments.stream().filter(punishment -> punishment.getType() == type).collect(Collectors.toList());
     }
 
     public Punishment getActivePunishmentByType(PunishmentType type) {
-        for (var punishment : this.punishments) {
-            if (punishment.getType() == type && punishment.isActive()) {
+        for (var punishment : getPunishments(type)) {
+            if (punishment.isActive()) {
                 return punishment;
             }
         }
@@ -253,6 +254,10 @@ public class Profile {
 
     public Component getColoredPrefix() {
         return grant.getRank().getPrefix();
+    }
+
+    public void save() {
+        MongoUtil.saveDocument(collection, uuid, this);
     }
 
     @Getter @Setter

@@ -8,6 +8,10 @@ public class Auth {
 
     @Getter private static final GoogleAuthenticator googleAuth = new GoogleAuthenticator();
 
+    public static int getCode(String key) {
+        return googleAuth.getTotpPassword(key);
+    }
+
     public static boolean isValid(String key, int code) {
         return googleAuth.authorize(key, code);
     }

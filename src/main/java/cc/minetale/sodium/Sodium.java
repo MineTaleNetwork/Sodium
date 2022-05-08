@@ -2,6 +2,7 @@ package cc.minetale.sodium;
 
 import cc.minetale.postman.Postman;
 import cc.minetale.sodium.data.EventListener;
+import cc.minetale.sodium.payloads.FriendPayload;
 import cc.minetale.sodium.payloads.ProfileUpdatePayloads;
 import cc.minetale.sodium.payloads.proxy.ProxyPlayerConnectPayload;
 import cc.minetale.sodium.payloads.proxy.ProxyPlayerDisconnectPayload;
@@ -56,6 +57,8 @@ public class Sodium {
                 ProxyPlayerConnectPayload.class,
                 ProxyPlayerDisconnectPayload.class,
                 ProxyPlayerSwitchPayload.class,
+                FriendPayload.class,
+                ProfileUpdatePayloads.UpdateProfilePayload.class,
                 ProfileUpdatePayloads.GrantPayload.class,
                 ProfileUpdatePayloads.PunishmentPayload.class
         ).forEach(payload -> postman.getPayloadsRegistry().registerPayload(payload));
