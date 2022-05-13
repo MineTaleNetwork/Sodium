@@ -15,7 +15,7 @@ public class Message {
 
     public static TextComponent CONSOLE = Component.text("Console", NamedTextColor.DARK_RED);
 
-    public static Style style(NamedTextColor color, TextDecoration... decorations) {
+    public static Style style(TextColor color, TextDecoration... decorations) {
         return Style.style(color, decorations).decoration(TextDecoration.ITALIC, false);
     }
 
