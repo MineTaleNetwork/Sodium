@@ -3,7 +3,6 @@ package cc.minetale.sodium.profile.friend;
 import cc.minetale.sodium.cache.ProfileCache;
 import cc.minetale.sodium.cache.RequestCache;
 import cc.minetale.sodium.profile.Profile;
-import cc.minetale.sodium.util.Redis;
 
 public class Friend {
 
@@ -30,15 +29,13 @@ public class Friend {
         var targetUuid = target.getUuid();
         var cache = RequestCache.getFriendRequest();
 
-        return Redis.runRedisCommand(jedis -> {
-            var incoming = cache.getRawIncoming(playerUuid);
+        var outgoing = cache.getRawOutgoing(playerUuid);
 
-            if (!incoming.contains(targetUuid)) { return CancelResponse.NO_REQUEST; }
+        if (!outgoing.contains(targetUuid)) { return CancelResponse.NO_REQUEST; }
 
-            cache.removeCache(playerUuid, targetUuid);
+        cache.removeCache(playerUuid, targetUuid);
 
-            return CancelResponse.SUCCESS;
-        });
+        return CancelResponse.SUCCESS;
     }
 
     public static AddResponse addRequest(Profile player, Profile target) {
@@ -46,56 +43,53 @@ public class Friend {
         var targetUuid = target.getUuid();
         var cache = RequestCache.getFriendRequest();
 
-        return Redis.runRedisCommand(jedis -> {
-            if (player.isFriends(target) || target.isFriends(player)) { return AddResponse.ALREADY_FRIENDS; }
-            if (playerUuid.equals(targetUuid)) { return AddResponse.TARGET_IS_PLAYER; }
-            if (!target.getOptionsProfile().isReceivingFriendRequests()) { return AddResponse.REQUESTS_TOGGLED; }
-            if (player.isIgnoring(target)) { return AddResponse.TARGET_IGNORED; }
-            if (target.isIgnoring(player)) { return AddResponse.PLAYER_IGNORED; }
+        if (player.isFriends(target) || target.isFriends(player)) { return AddResponse.ALREADY_FRIENDS; }
+        if (playerUuid.equals(targetUuid)) { return AddResponse.TARGET_IS_PLAYER; }
+        if (!target.getOptionsProfile().isReceivingFriendRequests()) { return AddResponse.REQUESTS_TOGGLED; }
+        if (player.isIgnoring(target)) { return AddResponse.TARGET_IGNORED; }
+        if (target.isIgnoring(player)) { return AddResponse.PLAYER_IGNORED; }
 
-            var outgoing = jedis.smembers(cache.getOutgoingKey(playerUuid));
+        var outgoing = cache.getRawOutgoing(playerUuid);
 
-            if (outgoing.size() >= MAX_OUTGOING_REQUESTS) { return AddResponse.MAX_OUTGOING; }
-            if (outgoing.contains(targetUuid.toString())) { return AddResponse.REQUEST_EXIST; }
+        if (outgoing.size() >= MAX_OUTGOING_REQUESTS) { return AddResponse.MAX_OUTGOING; }
+        if (outgoing.contains(targetUuid)) { return AddResponse.REQUEST_EXIST; }
 
-            var incoming = jedis.smembers(cache.getIncomingKey(playerUuid));
+        var incoming = cache.getRawIncoming(playerUuid);
 
-            if (incoming.contains(targetUuid.toString())) { return AddResponse.PENDING_REQUEST; }
+        if (incoming.contains(targetUuid)) { return AddResponse.PENDING_REQUEST; }
 
-            cache.pushCache(playerUuid, targetUuid);
+        cache.pushCache(playerUuid, targetUuid);
 
-            return AddResponse.SUCCESS;
-        });
+        return AddResponse.SUCCESS;
     }
 
     public static AcceptResponse acceptRequest(Profile player, Profile target) {
         var playerUuid = player.getUuid();
         var targetUuid = target.getUuid();
+
         var cache = RequestCache.getFriendRequest();
+        var incoming = cache.getRawIncoming(playerUuid);
 
-        return Redis.runRedisCommand(jedis -> {
-            var outgoing = jedis.smembers(cache.getOutgoingKey(playerUuid));
+        if (!incoming.contains(targetUuid)) { return AcceptResponse.NO_REQUEST; }
 
-            if (!outgoing.contains(targetUuid.toString())) { return AcceptResponse.NO_REQUEST; }
+        cache.removeCache(playerUuid, targetUuid);
+        cache.removeCache(targetUuid, playerUuid);
 
-            cache.removeCache(playerUuid, targetUuid);
+        if (player.getFriends().size() >= MAX_FRIENDS) { return AcceptResponse.PLAYER_MAX_FRIENDS; }
+        if (target.getFriends().size() >= MAX_FRIENDS) { return AcceptResponse.TARGET_MAX_FRIENDS; }
+        if (player.isIgnoring(target)) { return AcceptResponse.TARGET_IGNORED; }
+        if (target.isIgnoring(player)) { return AcceptResponse.PLAYER_IGNORED; }
 
-            if (player.getFriends().size() >= MAX_FRIENDS) { return AcceptResponse.PLAYER_MAX_FRIENDS; }
-            if (target.getFriends().size() >= MAX_FRIENDS) { return AcceptResponse.TARGET_MAX_FRIENDS; }
-            if (player.isIgnoring(target)) { return AcceptResponse.TARGET_IGNORED; }
-            if (target.isIgnoring(player)) { return AcceptResponse.PLAYER_IGNORED; }
+        player.addFriend(target);
+        target.addFriend(player);
 
-            player.removeFriend(target);
-            target.removeFriend(player);
+        player.save();
+        target.save();
 
-            player.save();
-            target.save();
+        ProfileCache.modifyProfile(player);
+        ProfileCache.modifyProfile(target);
 
-            ProfileCache.modifyProfile(player);
-            ProfileCache.modifyProfile(target);
-
-            return AcceptResponse.SUCCESS;
-        });
+        return AcceptResponse.SUCCESS;
     }
 
     public enum RemoveResponse { NOT_ADDED, SUCCESS }

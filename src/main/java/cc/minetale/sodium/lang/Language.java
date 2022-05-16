@@ -77,7 +77,7 @@ public class Language {
     }
 
     public static class Friend {
-        public static String NO_FRIENDS = notification("Friend") + "<gray>You don't seem to have any friends, try adding some!";
+        public static String NO_FRIENDS = notification("Friend") + "<red>You don't seem to have any friends, try adding some!";
         public static String NO_REQUEST = notification("Friend") + "<red>You do not have a pending friend request from <0>";
 
         public static String INVITE_NO_OUTGOING = notification("Friend") + "<red>You don't have any outgoing friend requests.";
